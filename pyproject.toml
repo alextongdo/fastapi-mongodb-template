@@ -8,13 +8,11 @@ dependencies = [
     "beanie>=2.0.1",
     "fastapi[standard]>=0.123.0",
     "pydantic-settings>=2.12.0",
+    "pyjwt[crypto]>=2.10.1",
     "pymongo>=4.15.4",
 ]
 
 [dependency-groups]
-auth0 = [
-    "pyjwt[crypto]>=2.10.1",
-]
 dev = [
     "ruff>=0.14.7",
 ]
