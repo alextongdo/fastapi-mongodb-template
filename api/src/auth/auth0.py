@@ -1,23 +1,22 @@
+
 import jwt
-from typing import Optional
 from fastapi import Depends
 from fastapi.security import (
-    HTTPBearer,
     HTTPAuthorizationCredentials,
+    HTTPBearer,
 )
 
 from api.core.config import settings
-from api.src.users.types import User
 from api.core.exceptions import (
-    UnauthorizedException,
     ForbiddenException,
+    UnauthorizedException,
 )
-
 from api.src.users.service import UserService
+from api.src.users.types import User
 
 
 def _extract_auth0_id_email_name_from_token(
-    token: Optional[HTTPAuthorizationCredentials],
+    token: HTTPAuthorizationCredentials | None,
 ):
     if token:
         try:
@@ -49,7 +48,7 @@ def _extract_auth0_id_email_name_from_token(
                 name = email.split("@")[0]
             return auth0_id, email, name
         except jwt.exceptions.PyJWTError as error:
-            raise UnauthorizedException(detail=str(error))
+            raise UnauthorizedException(detail=str(error)) from error
     else:
         if settings.ENABLE_FAKE_AUTH:
             auth0_id = "fake_auth0_id"
@@ -61,7 +60,7 @@ def _extract_auth0_id_email_name_from_token(
 
 
 async def get_current_user(
-    token: Optional[HTTPAuthorizationCredentials] = Depends(
+    token: HTTPAuthorizationCredentials | None = Depends(
         HTTPBearer(auto_error=False)
     ),
 ) -> User:

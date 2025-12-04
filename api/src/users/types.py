@@ -1,6 +1,7 @@
 from typing import Annotated
-from pydantic import Field, BaseModel
+
 from beanie import Document, Indexed, PydanticObjectId
+from pydantic import BaseModel, Field
 
 
 class User(Document):
@@ -21,3 +22,8 @@ class User(Document):
         auth0_id: str
         name: str
         email: str
+        orgs: list["OrgReponse"] = Field(default_factory=list)
+
+        class OrgReponse(BaseModel):
+            id: PydanticObjectId
+            name: str

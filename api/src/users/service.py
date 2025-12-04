@@ -1,32 +1,30 @@
-from typing import Optional
+
 import pymongo
 from pymongo.asynchronous.client_session import AsyncClientSession
-
 
 from api.core.exceptions import NotFoundException
 from api.core.logging import get_logger
 from api.src.users.types import User
-
 
 logger = get_logger(__name__)
 
 
 class UserService:
 
-    async def create(self, session: Optional[AsyncClientSession] = None) -> User:
+    async def create(self, session: AsyncClientSession | None = None) -> User:
         raise NotImplementedError("Create method not implemented.")
 
-    async def get(self, session: Optional[AsyncClientSession] = None) -> User:
+    async def get(self, session: AsyncClientSession | None = None) -> User:
         raise NotImplementedError("Get method not implemented.")
 
-    async def update(self, session: Optional[AsyncClientSession] = None) -> User:
+    async def update(self, session: AsyncClientSession | None = None) -> User:
         raise NotImplementedError("Update method not implemented.")
 
-    async def delete(self, session: Optional[AsyncClientSession] = None) -> User:
+    async def delete(self, session: AsyncClientSession | None = None) -> User:
         raise NotImplementedError("Delete method not implemented.")
 
     async def get_by_auth0_id(
-        self, auth0_id: str, session: Optional[AsyncClientSession] = None
+        self, auth0_id: str, session: AsyncClientSession | None = None
     ) -> User:
         user = await User.find_one({"auth0_id": auth0_id}, session=session)
         if not user:
@@ -39,7 +37,7 @@ class UserService:
         self,
         auth0_id: str,
         user_update: User.Update,
-        session: Optional[AsyncClientSession] = None,
+        session: AsyncClientSession | None = None,
     ) -> User:
         """
         Atomic operation to either find a user by auth0

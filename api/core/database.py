@@ -1,8 +1,8 @@
-from pymongo import AsyncMongoClient
 from beanie import init_beanie
+from pymongo import AsyncMongoClient
 
-from api.core.config import settings
 import api.src.models as models
+from api.core.config import settings
 
 client = AsyncMongoClient(settings.MONGO_URI)
 

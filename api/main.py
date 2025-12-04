@@ -1,18 +1,22 @@
 from contextlib import asynccontextmanager
+
 import httpx
 from fastapi import FastAPI, Request
+from fastapi.exceptions import RequestValidationError
 from fastapi.middleware.cors import CORSMiddleware
 from fastapi.responses import JSONResponse
-from fastapi.exceptions import RequestValidationError
 
 from api.core.config import settings
-from api.core.logging import get_logger, setup_logging
-from api.core.database import init_db, get_client, drop_db
+from api.core.database import get_client, init_db
 from api.core.exceptions import (
     InternalServerException,
     TypedHTTPException,
     ValidationException,
 )
+from api.core.logging import get_logger, setup_logging
+from api.src.orgs.routes import router as orgs_router
+from api.src.users.types import User
+from api.src.utils import seed_db
 
 setup_logging()
 
@@ -37,7 +41,7 @@ async def lifespan(app: FastAPI):
 
     # Shutdown
     logger.info("Application shutting down...")
-    get_client().close()
+    await get_client().close()
 
     client: httpx.AsyncClient | None = getattr(app.state, "http_client", None)
     if client:
@@ -59,7 +63,7 @@ app.add_middleware(
 )
 
 # Include routers
-app.include_router(cases_router)
+app.include_router(orgs_router)
 
 
 @app.get("/health")

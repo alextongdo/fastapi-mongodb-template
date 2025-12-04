@@ -34,3 +34,6 @@ lint.select = [
     # isort
     "I",
 ]
+lint.ignore = [
+    "B008",
+]
