@@ -3,7 +3,6 @@
 This repository contains an *opinionated* template for a FastAPI backend API with MongoDB as the no-SQL database.
 
 It is primarily meant for my own personal use and thus contains features I've found useful over my *very limited* time developing backends.
-
 However if you are nevertheless reading this, perhaps you have found this template useful and if so, I'd appreciate it if you left a star.
 
 ## Features
@@ -45,4 +44,5 @@ exports.onExecutePostLogin = async (event, api) => {
     }
 };
 ```
+
 
