@@ -1,8 +1,8 @@
 from fastapi import APIRouter, Depends
 
+from api.src.memberships.service import MembershipService
 from api.src.orgs.service import OrgService
 from api.src.orgs.types import Organization
-from api.src.user_orgs.service import UserOrgService
 
 router = APIRouter(prefix="/orgs", tags=["orgs"])
 
@@ -11,25 +11,25 @@ router = APIRouter(prefix="/orgs", tags=["orgs"])
 async def get_org(
     org_name: str,
     org_service: OrgService = Depends(OrgService),
-    user_org_service: UserOrgService = Depends(UserOrgService),
+    membership_service: MembershipService = Depends(MembershipService),
 ):
     """Get organization details by name."""
     db_org = await org_service.get_by_name(org_name)
-    db_user_orgs = await user_org_service.get_all_by_org_id(
+    db_memberships = await membership_service.get_all_by_org_id(
         org_id=db_org.id, status="approved"
     )
-    for db_user_org in db_user_orgs:
-        await db_user_org.fetch_link("user")
+    for db_membership in db_memberships:
+        await db_membership.fetch_link("user")
     return {
         "id": db_org.id,
         "name": db_org.name,
         "users": [
             {
-                "id": db_user_org.user.id,
-                "name": db_user_org.user.name,
-                "email": db_user_org.user.email,
+                "id": db_membership.user.id,
+                "name": db_membership.user.name,
+                "email": db_membership.user.email,
             }
-            for db_user_org in db_user_orgs
+            for db_membership in db_memberships
         ],
     }
 

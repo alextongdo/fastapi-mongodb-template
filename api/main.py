@@ -14,7 +14,9 @@ from api.core.exceptions import (
     ValidationException,
 )
 from api.core.logging import get_logger, setup_logging
+from api.src.memberships.routes import router as memberships_router
 from api.src.orgs.routes import router as orgs_router
+from api.src.users.routes import router as users_router
 from api.src.users.types import User
 from api.src.utils import seed_db
 
@@ -64,6 +66,8 @@ app.add_middleware(
 
 # Include routers
 app.include_router(orgs_router)
+app.include_router(users_router)
+app.include_router(memberships_router)
 
 
 @app.get("/health")
