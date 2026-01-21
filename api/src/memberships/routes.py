@@ -1,6 +1,7 @@
 from beanie import PydanticObjectId
 from fastapi import APIRouter, Depends
 
+from api.core.exceptions import ValidationException
 from api.src.auth.auth0 import get_authed_user
 from api.src.memberships.service import MembershipService
 from api.src.memberships.types import Membership
@@ -16,9 +17,38 @@ async def invite_user_to_org(
     membership_service: MembershipService = Depends(MembershipService),
 ):
     """Members of an organization can invite a user to join the org."""
+    if payload.user_id == user.id:
+        raise ValidationException("Cannot invite yourself to an organization.")
     # check if user is in organization to be inviting others
+    if not await membership_service.get_by_org_and_user_id(
+        org_id=payload.org_id,
+        user_id=user.id,
+    ):
+        raise ValidationException("You are not a member of this organization.")
     # create pending membership
-    pass
+    membership = await membership_service.create(
+        Membership.Create(
+            org_id=payload.org_id,
+            user_id=payload.user_id,
+            source="org",
+        )
+    )
+    await membership.fetch_link("org")
+    await membership.fetch_link("user")
+    return {
+        "id": membership.id,
+        "org": {
+            "id": membership.org.id,
+            "name": membership.org.name,
+        },
+        "user": {
+            "id": membership.user.id,
+            "name": membership.user.name,
+            "email": membership.user.email,
+        },
+        "status": membership.status,
+        "source": membership.source,
+    }
 
 
 @router.post("/requests", response_model=Membership.Response)

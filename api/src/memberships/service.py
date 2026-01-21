@@ -11,8 +11,20 @@ logger = get_logger(__name__)
 
 class MembershipService:
 
-    async def create(self, session: AsyncClientSession | None = None) -> Membership:
-        raise NotImplementedError("Create method not implemented.")
+    async def create(
+        self, membership: Membership.Create, session: AsyncClientSession | None = None
+    ) -> Membership:
+        mbrship = Membership(
+            org=membership.org_id,
+            user=membership.user_id,
+            source=membership.source,
+        )
+        await mbrship.create(session=session)
+        logger.info(
+            "CREATE membership: "
+            f"org_id={mbrship.org.ref.id}, user_id={mbrship.user.ref.id}"
+        )
+        return mbrship
 
     async def get(self, session: AsyncClientSession | None = None) -> Membership:
         raise NotImplementedError("Get method not implemented.")
@@ -66,3 +78,18 @@ class MembershipService:
             f"GET all memberships: user_id={user_id}, status={status}, source={source}"
         )
         return memberships
+
+    async def get_by_org_and_user_id(
+        self,
+        org_id: PydanticObjectId,
+        user_id: PydanticObjectId,
+        session: AsyncClientSession | None = None,
+    ) -> Membership | None:
+        """
+        Get a membership by org id and user id.
+        """
+        membership = await Membership.find_one(
+            {"org.$id": org_id, "user.$id": user_id}, session=session
+        )
+        logger.info(f"GET membership: org_id={org_id}, user_id={user_id}")
+        return membership

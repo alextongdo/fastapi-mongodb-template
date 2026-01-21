@@ -1,7 +1,6 @@
 
 from pymongo.asynchronous.client_session import AsyncClientSession
 
-from api.core.exceptions import NotFoundException
 from api.core.logging import get_logger
 from api.src.orgs.types import Organization
 
@@ -33,9 +32,7 @@ class OrgService:
 
     async def get_by_name(
         self, org_name: str, session: AsyncClientSession | None = None
-    ) -> Organization:
+    ) -> Organization | None:
         org = await Organization.find_one({"name": org_name}, session=session)
-        if not org:
-            raise NotFoundException(f"'{org_name}' not found")
-        logger.info(f"GET org '{org_name}'")
+        logger.info(f"GET org: name={org_name}")
         return org

@@ -2,7 +2,6 @@
 import pymongo
 from pymongo.asynchronous.client_session import AsyncClientSession
 
-from api.core.exceptions import NotFoundException
 from api.core.logging import get_logger
 from api.src.users.types import User
 
@@ -25,12 +24,9 @@ class UserService:
 
     async def get_by_auth0_id(
         self, auth0_id: str, session: AsyncClientSession | None = None
-    ) -> User:
+    ) -> User | None:
         user = await User.find_one({"auth0_id": auth0_id}, session=session)
-        if not user:
-            raise NotFoundException(f"User with auth0_id '{auth0_id}' not found")
-
-        logger.info(f"Retrieved user with auth0_id: {auth0_id}")
+        logger.info(f"GET user: auth0_id={auth0_id}")
         return user
 
     async def upsert_by_auth0_id(
@@ -49,5 +45,5 @@ class UserService:
             response_type=pymongo.ReturnDocument.AFTER,
             session=session,
         )
-        logger.info(f"Upserted user with auth0_id: {auth0_id}")
+        logger.info(f"UPSERT user: auth0_id={auth0_id}")
         return result

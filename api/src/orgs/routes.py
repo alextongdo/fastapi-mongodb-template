@@ -7,7 +7,7 @@ from api.src.orgs.types import Organization
 router = APIRouter(prefix="/orgs", tags=["orgs"])
 
 
-@router.get("/{org_name}", response_model=Organization.Response)
+@router.get("/{org_name}", response_model=Organization.DetailResponse)
 async def get_org(
     org_name: str,
     org_service: OrgService = Depends(OrgService),
@@ -34,7 +34,7 @@ async def get_org(
     }
 
 
-@router.post("/", response_model=Organization.Response)
+@router.post("/", response_model=Organization.DetailResponse)
 async def create_org(
     org: Organization.Create,
     org_service: OrgService = Depends(OrgService),

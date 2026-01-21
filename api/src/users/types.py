@@ -3,6 +3,8 @@ from typing import Annotated
 from beanie import Document, Indexed, PydanticObjectId
 from pydantic import BaseModel, Field
 
+from api.src.shared import OrganizationResponse, UserResponse
+
 
 class User(Document):
     id: PydanticObjectId = Field(default_factory=PydanticObjectId, alias="_id")
@@ -17,13 +19,12 @@ class User(Document):
         name: str
         email: str
 
-    class Response(BaseModel):
+    class Response(UserResponse):
+        pass
+
+    class DetailResponse(BaseModel):
         id: PydanticObjectId
         auth0_id: str
         name: str
         email: str
-        orgs: list["OrgReponse"] = Field(default_factory=list)
-
-        class OrgReponse(BaseModel):
-            id: PydanticObjectId
-            name: str
+        orgs: list[OrganizationResponse] = Field(default_factory=list)

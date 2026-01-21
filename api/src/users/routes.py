@@ -7,7 +7,7 @@ from api.src.users.types import User
 router = APIRouter(prefix="/users", tags=["users"])
 
 
-@router.get("/me", response_model=User.Response)
+@router.get("/me", response_model=User.DetailResponse)
 async def get_user(
     user: User = Depends(get_authed_user),
     membership_service: MembershipService = Depends(MembershipService),
