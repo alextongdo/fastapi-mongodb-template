@@ -8,7 +8,7 @@ However if you are nevertheless reading this, perhaps you have found this templa
 ## Features
 
 ### Basics
-- Implements a toy API where users can request to join organizations and organizations can invite users.
+- Implements a toy API where users can create organizations and invite other users to them.
 - **Pydantic** for schema validation.
 - **Beanie** as an async object-document mapper (ODM) for MongoDB.
 - **Github Actions** for CI/CD.
