@@ -4,7 +4,10 @@ from pymongo import AsyncMongoClient
 import api.src.models as models
 from api.core.config import settings
 
-client = AsyncMongoClient(settings.MONGO_URI)
+client = AsyncMongoClient(
+    settings.MONGO_URI,
+    serverSelectionTimeoutMS=5000,
+)
 
 def get_client():
     return client

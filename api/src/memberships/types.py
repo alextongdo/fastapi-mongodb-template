@@ -13,7 +13,6 @@ class Membership(Document):
     org: Link[Organization]
     user: Link[User]
     status: Literal["pending", "approved"] = "pending"
-    source: Literal["user", "org"]
 
     class Settings:
         name = "memberships"
@@ -29,13 +28,9 @@ class Membership(Document):
         org: Organization.Response
         user: User.Response
         status: Literal["pending", "approved"]
-        source: Literal["user", "org"]
 
     class ListResponse(BaseModel):
         memberships: list["Membership.Response"]
-
-    class Request(BaseModel):
-        org_id: str
 
     class Invite(BaseModel):
         org_id: str
@@ -44,4 +39,6 @@ class Membership(Document):
     class Create(BaseModel):
         org_id: PydanticObjectId
         user_id: PydanticObjectId
-        source: Literal["user", "org"]
+
+    class Update(BaseModel):
+        status: Literal["pending", "approved"] | None = None

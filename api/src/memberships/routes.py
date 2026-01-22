@@ -1,21 +1,22 @@
 from beanie import PydanticObjectId
 from fastapi import APIRouter, Depends
 
-from api.core.exceptions import ValidationException
+from api.core.exceptions import NotFoundException, ValidationException
 from api.src.auth.auth0 import get_authed_user
 from api.src.memberships.service import MembershipService
 from api.src.memberships.types import Membership
+from api.src.orgs.types import Organization
 from api.src.users.types import User
 
 router = APIRouter(prefix="/memberships", tags=["memberships"])
 
 
-@router.post("/invites", response_model=Membership.Response)
+@router.post("/invites")
 async def invite_user_to_org(
     payload: Membership.Invite,
     user: User = Depends(get_authed_user),
     membership_service: MembershipService = Depends(MembershipService),
-):
+) -> Membership.Response:
     """Members of an organization can invite a user to join the org."""
     if payload.user_id == user.id:
         raise ValidationException("Cannot invite yourself to an organization.")
@@ -30,69 +31,86 @@ async def invite_user_to_org(
         Membership.Create(
             org_id=payload.org_id,
             user_id=payload.user_id,
-            source="org",
         )
     )
     await membership.fetch_link("org")
     await membership.fetch_link("user")
-    return {
-        "id": membership.id,
-        "org": {
-            "id": membership.org.id,
-            "name": membership.org.name,
-        },
-        "user": {
-            "id": membership.user.id,
-            "name": membership.user.name,
-            "email": membership.user.email,
-        },
-        "status": membership.status,
-        "source": membership.source,
-    }
+    return Membership.Response(
+        id=membership.id,
+        org=Organization.Response(
+            id=membership.org.id,
+            name=membership.org.name,
+        ),
+        user=User.Response(
+            id=membership.user.id,
+            name=membership.user.name,
+            email=membership.user.email,
+        ),
+        status=membership.status,
+    )
 
 
-@router.post("/requests", response_model=Membership.Response)
-async def request_to_join_org(
-    payload: Membership.Request,
-    user: User = Depends(get_authed_user),
-):
-    """A user can request to join an organization."""
-    # get org to check if it exists
-    # create pending membership
-    pass
-
-
-@router.get("/pending", response_model=Membership.ListResponse)
+@router.get("/invites/pending")
 async def get_all_pending_memberships(
     user: User = Depends(get_authed_user),
     membership_service: MembershipService = Depends(MembershipService),
-):
+) -> Membership.ListResponse:
     """
-    Get all pending membership requests including both invites and requests
-    for the user.
+    Get all pending membership requests for the user.
     """
-    # get all pending memberships for a user
+    # get all pending requests for a user
     pass
 
 
-@router.delete("/invites/{membership_id}", response_model=Membership.Response)
+@router.patch("/invites/{membership_id}")
+async def accept_invite(
+    membership_id: PydanticObjectId,
+    user: User = Depends(get_authed_user),
+    membership_service: MembershipService = Depends(MembershipService),
+) -> Membership.Response:
+    """Accept a membership invite from an organization."""
+    # check if membership exists and is an invite for the user
+    membership = await membership_service.get(membership_id=membership_id)
+    if not membership:
+        raise NotFoundException("That invitation was not found.")
+    await membership.fetch_link("user")
+    if membership.user.id != user.id:
+        raise ValidationException("You were not invited to this organization.")
+    if membership.status != "pending":
+        raise ValidationException("You have already accepted this invitation.")
+    # update membership status
+    membership = await membership_service.update(Membership.Update(status="approved"))
+    assert membership is not None
+    return Membership.Response(
+        id=membership.id,
+        org=Organization.Response(
+            id=membership.org.id,
+            name=membership.org.name,
+        ),
+        user=User.Response(
+            id=membership.user.id,
+            name=membership.user.name,
+            email=membership.user.email,
+        ),
+        status=membership.status,
+    )
+
+
+@router.delete("/invites/{membership_id}")
 async def cancel_invite(
     membership_id: PydanticObjectId,
     user: User = Depends(get_authed_user),
     membership_service: MembershipService = Depends(MembershipService),
-):
+) -> Membership.Response:
     """Cancel a membership invite."""
     # check if user is in organization to be cancelling invite
-    # delete membership
-    pass
-
-
-@router.delete("/requests/{membership_id}", response_model=Membership.Response)
-async def cancel_request(
-    membership_id: PydanticObjectId,
-    user: User = Depends(get_authed_user),
-    membership_service: MembershipService = Depends(MembershipService),
-):
-    """Cancel a membership request."""
+    membership = await membership_service.get(membership_id=membership_id)
+    if not membership:
+        raise NotFoundException("That invitation was not found.")
+    if not await membership_service.get(
+        org_id=membership.org.ref.id,
+        user_id=user.id,
+    ):
+        raise ValidationException("You are not a member of this organization.")
     # delete membership
     pass

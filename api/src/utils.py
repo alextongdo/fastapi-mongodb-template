@@ -1,7 +1,7 @@
 from beanie import PydanticObjectId
 
+from api.src.memberships.types import Membership
 from api.src.orgs.types import Organization
-from api.src.user_orgs.types import UserOrg
 from api.src.users.types import User
 
 
@@ -35,11 +35,10 @@ async def seed_orgs():
 
 async def seed_user_orgs():
     user_orgs = [
-        UserOrg(
+        Membership(
             org=num_to_object_id(2),
             user=num_to_object_id(1),
             status="approved",
-            source="org",
         )
     ]
-    await UserOrg.insert_many(user_orgs)
+    await Membership.insert_many(user_orgs)
