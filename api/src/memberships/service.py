@@ -63,14 +63,22 @@ class MembershipService:
         logger.info(f"UPDATE membership: id={membership.id}")
         return membership
 
-    async def delete(self, session: AsyncClientSession | None = None) -> Membership:
-        raise NotImplementedError("Delete method not implemented.")
+    async def delete(
+        self, membership_id: PydanticObjectId, session: AsyncClientSession | None = None
+    ) -> Membership | None:
+        membership = await self.get(membership_id=membership_id, session=session)
+        if not membership:
+            return None
+        await membership.delete(session=session)
+        logger.info(f"DELETE membership: id={membership.id}")
+        return membership
 
     async def get_all(
         self,
         org_id: PydanticObjectId | None = None,
         user_id: PydanticObjectId | None = None,
         status: Literal["pending", "approved"] | None = None,
+        fetch_links: bool = False,
         session: AsyncClientSession | None = None,
     ) -> list[Membership]:
         """
@@ -84,7 +92,9 @@ class MembershipService:
             query["user.$id"] = user_id
         if status:
             query["status"] = status
-        memberships = await Membership.find(query, session=session).to_list()
+        memberships = await Membership.find(
+            query, fetch_links=fetch_links, session=session
+        ).to_list()
         logger.info(
             f"GET all memberships: org_id={org_id}, user_id={user_id}, status={status}"
         )

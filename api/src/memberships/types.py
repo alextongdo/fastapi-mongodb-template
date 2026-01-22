@@ -32,10 +32,6 @@ class Membership(Document):
     class ListResponse(BaseModel):
         memberships: list["Membership.Response"]
 
-    class Invite(BaseModel):
-        org_id: str
-        user_id: PydanticObjectId
-
     class Create(BaseModel):
         org_id: PydanticObjectId
         user_id: PydanticObjectId

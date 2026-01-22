@@ -13,7 +13,7 @@ router = APIRouter(prefix="/memberships", tags=["memberships"])
 
 @router.post("/invites")
 async def invite_user_to_org(
-    payload: Membership.Invite,
+    payload: Membership.Create,
     user: User = Depends(get_authed_user),
     membership_service: MembershipService = Depends(MembershipService),
 ) -> Membership.Response:
@@ -21,7 +21,7 @@ async def invite_user_to_org(
     if payload.user_id == user.id:
         raise ValidationException("Cannot invite yourself to an organization.")
     # check if user is in organization to be inviting others
-    if not await membership_service.get_by_org_and_user_id(
+    if not await membership_service.get(
         org_id=payload.org_id,
         user_id=user.id,
     ):
@@ -56,10 +56,31 @@ async def get_all_pending_memberships(
     membership_service: MembershipService = Depends(MembershipService),
 ) -> Membership.ListResponse:
     """
-    Get all pending membership requests for the user.
+    Get all pending membership invites for the user.
     """
-    # get all pending requests for a user
-    pass
+    memberships = await membership_service.get_all(
+        user_id=user.id,
+        status="pending",
+        fetch_links=True,
+    )
+    return Membership.ListResponse(
+        memberships=[
+            Membership.Response(
+                id=membership.id,
+                org=Organization.Response(
+                    id=membership.org.id,
+                    name=membership.org.name,
+                ),
+                user=User.Response(
+                    id=membership.user.id,
+                    name=membership.user.name,
+                    email=membership.user.email,
+                ),
+                status=membership.status,
+            )
+            for membership in memberships
+        ]
+    )
 
 
 @router.patch("/invites/{membership_id}")
@@ -73,14 +94,15 @@ async def accept_invite(
     membership = await membership_service.get(membership_id=membership_id)
     if not membership:
         raise NotFoundException("That invitation was not found.")
-    await membership.fetch_link("user")
-    if membership.user.id != user.id:
+    if membership.user.ref.id != user.id:
         raise ValidationException("You were not invited to this organization.")
     if membership.status != "pending":
         raise ValidationException("You have already accepted this invitation.")
     # update membership status
     membership = await membership_service.update(Membership.Update(status="approved"))
     assert membership is not None
+    await membership.fetch_link("org")
+    await membership.fetch_link("user")
     return Membership.Response(
         id=membership.id,
         org=Organization.Response(
@@ -113,4 +135,20 @@ async def cancel_invite(
     ):
         raise ValidationException("You are not a member of this organization.")
     # delete membership
-    pass
+    membership = await membership_service.delete(membership_id=membership_id)
+    assert membership is not None
+    await membership.fetch_link("org")
+    await membership.fetch_link("user")
+    return Membership.Response(
+        id=membership.id,
+        org=Organization.Response(
+            id=membership.org.id,
+            name=membership.org.name,
+        ),
+        user=User.Response(
+            id=membership.user.id,
+            name=membership.user.name,
+            email=membership.user.email,
+        ),
+        status=membership.status,
+    )

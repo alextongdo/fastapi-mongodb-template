@@ -2,7 +2,7 @@ from fastapi import APIRouter, Depends
 
 from api.src.auth.auth0 import get_authed_user
 from api.src.memberships.service import MembershipService
-from api.src.shared import OrganizationResponse
+from api.src.orgs.types import Organization
 from api.src.users.types import User
 
 router = APIRouter(prefix="/users", tags=["users"])
@@ -26,7 +26,7 @@ async def get_user(
         name=user.name,
         email=user.email,
         orgs=[
-            OrganizationResponse(
+            Organization.Response(
                 id=membership.org.id,
                 name=membership.org.name,
             )

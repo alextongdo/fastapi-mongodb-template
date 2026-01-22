@@ -18,10 +18,19 @@ class OrgService:
         return new_org
 
     async def get(
-        self, org_id: PydanticObjectId, session: AsyncClientSession | None = None
+        self,
+        org_id: PydanticObjectId | None = None,
+        org_name: str | None = None,
+        session: AsyncClientSession | None = None,
     ) -> Organization | None:
-        org = await Organization.find_one({"_id": org_id}, session=session)
-        logger.info(f"GET org: id={org_id}")
+        if org_id is not None:
+            filter = {"_id": org_id}
+        elif org_name is not None:
+            filter = {"name": org_name}
+        else:
+            raise ValueError("Must provide either org_id or org_name")
+        org = await Organization.find_one(filter, session=session)
+        logger.info(f"GET org: id={org_id}, name={org_name}")
         return org
 
     async def update(self, session: AsyncClientSession | None = None) -> Organization:
@@ -29,10 +38,3 @@ class OrgService:
 
     async def delete(self, session: AsyncClientSession | None = None) -> Organization:
         raise NotImplementedError("Delete method not implemented.")
-
-    async def get_by_name(
-        self, org_name: str, session: AsyncClientSession | None = None
-    ) -> Organization | None:
-        org = await Organization.find_one({"name": org_name}, session=session)
-        logger.info(f"GET org: name={org_name}")
-        return org

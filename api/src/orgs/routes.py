@@ -3,7 +3,7 @@ from fastapi import APIRouter, Depends
 from api.src.memberships.service import MembershipService
 from api.src.orgs.service import OrgService
 from api.src.orgs.types import Organization
-from api.src.shared import UserResponse
+from api.src.users.types import User
 
 router = APIRouter(prefix="/orgs", tags=["orgs"])
 
@@ -15,8 +15,8 @@ async def get_org(
     membership_service: MembershipService = Depends(MembershipService),
 ) -> Organization.DetailResponse:
     """Get organization details by name."""
-    db_org = await org_service.get_by_name(org_name)
-    db_memberships = await membership_service.get_all_by_org_id(
+    db_org = await org_service.get(org_name=org_name)
+    db_memberships = await membership_service.get_all(
         org_id=db_org.id, status="approved"
     )
     for db_membership in db_memberships:
@@ -25,7 +25,7 @@ async def get_org(
         id=db_org.id,
         name=db_org.name,
         users=[
-            UserResponse(
+            User.Response(
                 id=db_membership.user.id,
                 name=db_membership.user.name,
                 email=db_membership.user.email,
