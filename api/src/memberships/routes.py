@@ -24,6 +24,7 @@ async def invite_user_to_org(
     if not await membership_service.get(
         org_id=payload.org_id,
         user_id=user.id,
+        status="approved",
     ):
         raise ValidationException("You are not a member of this organization.")
     # create pending membership
@@ -132,6 +133,7 @@ async def cancel_invite(
     if not await membership_service.get(
         org_id=membership.org.ref.id,
         user_id=user.id,
+        status="approved",
     ):
         raise ValidationException("You are not a member of this organization.")
     # delete membership

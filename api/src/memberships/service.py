@@ -30,6 +30,7 @@ class MembershipService:
         membership_id: PydanticObjectId | None = None,
         org_id: PydanticObjectId | None = None,
         user_id: PydanticObjectId | None = None,
+        status: Literal["pending", "approved"] | None = None,
         session: AsyncClientSession | None = None,
     ) -> Membership | None:
         """
@@ -43,6 +44,8 @@ class MembershipService:
             raise ValueError(
                 "Must provide either membership_id or both org_id and user_id"
             )
+        if status is not None:
+            filter["status"] = status
 
         membership = await Membership.find_one(filter, session=session)
         logger.info(

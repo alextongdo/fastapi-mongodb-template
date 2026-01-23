@@ -14,7 +14,7 @@ async def get_user(
     membership_service: MembershipService = Depends(MembershipService),
 ) -> User.DetailResponse:
     """Return the authenticated user's profile and approved org memberships."""
-    memberships = await membership_service.get_all_by_user_id(
+    memberships = await membership_service.get_all(
         user_id=user.id, status="approved"
     )
 
